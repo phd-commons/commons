@@ -46,6 +46,8 @@ Rules:
   local. If question 4 named an approved service, it may be declared `locality: institutional` with
   `restricted_approval: "<the approval reference>"`.
 - The verifier must come from a different model family from the author.
+- For reasoning models (Qwen3 and similar), set `thinking: off` on their providers; otherwise short structured
+  replies can come back empty. `commons doctor` reports an empty reply as RED.
 - One embedding model for the life of the index. Decide it now.
 - Write the plan to `MODELS.md`: each role's model, size, quantisation, origin, licence, and why.
 

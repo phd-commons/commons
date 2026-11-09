@@ -9,7 +9,7 @@ Pick by hardware (see docs/models.md):
   anthropic    Claude for PUBLIC material, Ollama locally for everything else
 """
 
-OLLAMA = {"kind": "openai", "base_url": "http://127.0.0.1:11434/v1", "locality": "local"}
+OLLAMA = {"kind": "openai", "base_url": "http://127.0.0.1:11434/v1", "locality": "local", "thinking": "off"}
 
 PRESETS: dict[str, dict] = {
     "demo": {
@@ -36,9 +36,9 @@ PRESETS: dict[str, dict] = {
     },
     "mlx": {
         "providers": {
-            "mlx_author": {"kind": "openai", "base_url": "http://127.0.0.1:8811/v1", "locality": "local"},
-            "mlx_worker": {"kind": "openai", "base_url": "http://127.0.0.1:8812/v1", "locality": "local"},
-            "mlx_verifier": {"kind": "openai", "base_url": "http://127.0.0.1:8813/v1", "locality": "local"},
+            "mlx_author": {"kind": "openai", "base_url": "http://127.0.0.1:8811/v1", "locality": "local", "thinking": "off"},
+            "mlx_worker": {"kind": "openai", "base_url": "http://127.0.0.1:8812/v1", "locality": "local", "thinking": "off"},
+            "mlx_verifier": {"kind": "openai", "base_url": "http://127.0.0.1:8813/v1", "locality": "local", "thinking": "off"},
             "st": {"kind": "sentence-transformers", "locality": "local"},
         },
         "roles": {

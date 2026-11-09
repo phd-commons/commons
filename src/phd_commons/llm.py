@@ -227,16 +227,39 @@ class Router:
                 time.sleep(2 ** attempt)
         raise ProviderError(f"Request to {url} failed after {retries} attempts: {last}")
 
+    @staticmethod
+    def _thinking_off(provider: dict, messages: list[dict]) -> tuple[list[dict], dict]:
+        """Ask a reasoning model to answer directly. Servers that do not know these hints ignore them."""
+        if str(provider.get("thinking", "")).lower() not in ("off", "false", "no"):
+            return messages, {}
+        msgs = [dict(m) for m in messages]
+        if msgs and msgs[0]["role"] == "system":
+            if not msgs[0]["content"].startswith("/no_think"):
+                msgs[0]["content"] = "/no_think\n" + msgs[0]["content"]
+        else:
+            msgs.insert(0, {"role": "system", "content": "/no_think"})
+        return msgs, {"chat_template_kwargs": {"enable_thinking": False}}
+
     def _openai_chat(self, t: Target, messages, temperature, max_tokens, json_mode):
         base = t.provider["base_url"].rstrip("/")
-        body = {"model": t.model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
-        body.update(t.provider.get("extra_body", {}) or {})
-        if json_mode and t.provider.get("json_mode", False):
-            body["response_format"] = {"type": "json_object"}
-        data = self._post(f"{base}/chat/completions", self._headers(t.provider), body)
-        msg = data["choices"][0]["message"]
-        usage = data.get("usage") or {}
-        return msg.get("content") or "", usage.get("prompt_tokens"), usage.get("completion_tokens")
+        messages, extra = self._thinking_off(t.provider, messages)
+        tin = tout = 0
+        for attempt in range(2):
+            body = {"model": t.model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
+            body.update(extra)
+            body.update(t.provider.get("extra_body", {}) or {})
+            if json_mode and t.provider.get("json_mode", False):
+                body["response_format"] = {"type": "json_object"}
+            data = self._post(f"{base}/chat/completions", self._headers(t.provider), body)
+            choice = data["choices"][0]
+            content = (choice.get("message") or {}).get("content") or ""
+            usage = data.get("usage") or {}
+            tin, tout = usage.get("prompt_tokens"), usage.get("completion_tokens")
+            # A reasoning model can spend the whole budget thinking and return nothing: give it room once.
+            if strip_reasoning(content) or choice.get("finish_reason") != "length" or max_tokens >= 8192:
+                return content, tin, tout
+            max_tokens = min(max_tokens * 4, 8192)
+        return content, tin, tout
 
     def _anthropic_chat(self, t: Target, messages, temperature, max_tokens):
         key = os.environ.get(t.provider.get("api_key_env", "ANTHROPIC_API_KEY"), "")
@@ -317,7 +340,10 @@ class Router:
             if role == "rerank":
                 return True, "configured"
             out = self.chat(role, [{"role": "user", "content": "Reply with the single word: ready"}],
-                            app="doctor/ping", max_tokens=20)
+                            app="doctor/ping", max_tokens=64)
+            if not out.strip():
+                return False, ("empty reply: a reasoning model may be using its whole budget to think; "
+                               "set thinking: off on this provider")
             return True, out[:40]
         except Exception as e:  # noqa: BLE001
             return False, str(e)[:160]

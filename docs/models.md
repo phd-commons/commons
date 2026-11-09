@@ -52,6 +52,10 @@ Kinds:
 - `openai`: chat at `/chat/completions`, embeddings at `/embeddings`. Ollama, LM Studio, llama.cpp server, vLLM,
   `mlx_lm.server`, many university gateways and most hosted APIs offer this. Optional `headers`, `extra_body` and
   `json_mode: true` (sends `response_format`) for servers that support them.
+  Set `thinking: off` on a provider serving a reasoning model (Qwen3 and similar) so that bulk jobs answer directly
+  instead of spending their budget thinking; Commons sends the standard switches (`/no_think` and
+  `chat_template_kwargs`), and retries once with more room if a reply still comes back empty. The Ollama and MLX
+  presets set it already.
 - `anthropic`: Anthropic's Messages API.
 - `sentence-transformers`: local embeddings and reranking inside the Commons process (`pip install "phd-commons[local-embed]"`).
 - `fake`: the deterministic demo stand-in. It is not a model.

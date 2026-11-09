@@ -62,3 +62,23 @@ def test_reply_cleaning():
     assert strip_reasoning("<think>a\nb</think>\nanswer") == "answer"
     assert extract_json('Sure! ```json\n[{"a": 1}]\n``` done') == [{"a": 1}]
     assert extract_json('prefix {"score": 2} suffix') == {"score": 2}
+
+
+def test_thinking_off_and_empty_reply_retry(ws):
+    calls = []
+
+    def handler(req: httpx.Request):
+        body = json.loads(req.content)
+        calls.append(body)
+        if len(calls) == 1:
+            return httpx.Response(200, json={"choices": [{"message": {"content": ""}, "finish_reason": "length"}]})
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ready"}, "finish_reason": "stop"}]})
+
+    ws.cfg["providers"]["q"] = {"kind": "openai", "base_url": "http://127.0.0.1:9/v1", "locality": "local",
+                                "thinking": "off"}
+    ws.cfg["roles"]["worker"] = {"provider": "q", "model": "qwen"}
+    r = _router(ws, handler)
+    assert r.chat("worker", [{"role": "user", "content": "hi"}], app="t", max_tokens=50) == "ready"
+    assert calls[0]["chat_template_kwargs"] == {"enable_thinking": False}
+    assert calls[0]["messages"][0]["content"].startswith("/no_think")
+    assert calls[1]["max_tokens"] == 200
