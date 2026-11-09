@@ -68,8 +68,7 @@ def process_source_claims(ws, store, router, source_id: int) -> dict:
             stats["failed_chunks"] += 1
             last_error = str(e)[:200]
             continue
-        if isinstance(items, dict):
-            items = items.get("claims", [items])
+        items = _as_list(items, "claims")
         for it in items[:max_claims] if isinstance(items, list) else []:
             claim = str(it.get("claim", "")).strip()
             quote = str(it.get("quote", "")).strip()
@@ -109,6 +108,16 @@ def process_source_claims(ws, store, router, source_id: int) -> dict:
     return stats
 
 
+def _as_list(value, key: str) -> list:
+    """Servers in JSON mode often return one object, or an array wrapped in an object, instead of a bare array."""
+    if isinstance(value, dict):
+        inner = value.get(key)
+        if isinstance(inner, list):
+            return inner
+        return [] if key in value else [value]
+    return value if isinstance(value, list) else []
+
+
 def _verify(router, claim: str, quote: str, s, source_id: int) -> str:
     try:
         reply = router.chat("verifier", prompts.verify_claim(claim, quote), app="claims/verify", tier=s["tier"],
@@ -131,6 +140,7 @@ def _link(router, store, claim_id: int, claim: str, quote: str, props: list[dict
         links = extract_json(reply)
     except Exception:  # noqa: BLE001
         return 0
+    links = _as_list(links, "links")
     valid = {p["code"] for p in props}
     n = 0
     for ln in links if isinstance(links, list) else []:

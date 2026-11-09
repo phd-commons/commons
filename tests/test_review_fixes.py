@@ -159,3 +159,14 @@ def test_unknown_encryption_needs_confirmation(ws, monkeypatch, tmp_path):
     assert "cannot check" in safety.restricted_blocked_reason(ws)
     ws.cfg["restricted"] = {"encryption_confirmed": True}
     assert safety.restricted_blocked_reason(ws) is None
+
+
+def test_single_object_json_replies_are_kept():
+    """Found live: in JSON mode a Qwen worker returned one link object, not an array, and it was dropped."""
+    from phd_commons.claims import _as_list
+    one = {"code": "P4", "stance": "supports", "reason": "r"}
+    assert _as_list(one, "links") == [one]
+    assert _as_list({"links": [one]}, "links") == [one]
+    assert _as_list({"links": None}, "links") == []
+    assert _as_list([one], "links") == [one]
+    assert _as_list("x", "links") == []

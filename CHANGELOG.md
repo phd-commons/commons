@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+Found by running the full pipeline against a Qwen fleet:
+
+- Claim extraction no longer sees your propositions. Shown them, models kept only claims they judged relevant
+  and often returned nothing; relevance is now judged only in the linking step.
+- Evidence links returned as a single JSON object, rather than an array, were silently dropped. They are kept.
+- `thinking: off` for reasoning models, with a retry when a reply comes back empty.
+- Crossref records with no abstract are filled from OpenAlex, including an open-access PDF where one exists.
+
 ## 0.1.1 (2026-11-09)
 
 - `commons mcp install claude-desktop | claude-code | print` registers the MCP server with one command.
