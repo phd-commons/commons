@@ -43,7 +43,7 @@ dev = ["pytest>=8", "ruff>=0.5"]
 commons = "phd_commons.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/alexkovaceski/phd-commons"
+Homepage = "https://github.com/phd-commons/commons"
 
 [build-system]
 requires = ["hatchling"]

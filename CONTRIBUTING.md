@@ -23,7 +23,7 @@ Pull requests are reviewed against the method in `docs/method.md`. In particular
 ## Development
 
 ```bash
-git clone https://github.com/alexkovaceski/phd-commons
+git clone https://github.com/phd-commons/commons
 cd phd-commons
 python -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]"

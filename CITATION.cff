@@ -8,5 +8,5 @@ authors:
 version: 0.1.0
 date-released: 2026-11-09
 license: Apache-2.0
-repository-code: "https://github.com/alexkovaceski/phd-commons"
+repository-code: "https://github.com/phd-commons/commons"
 keywords: [doctoral research, knowledge base, retrieval-augmented generation, local LLM, research methods]

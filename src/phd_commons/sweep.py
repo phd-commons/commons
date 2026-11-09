@@ -32,7 +32,7 @@ from .llm import extract_json
 from .okf import append_log
 from .thesis import sync_propositions
 
-UA_BASE = f"phd-commons/{__version__} (+https://github.com/alexkovaceski/phd-commons)"
+UA_BASE = f"phd-commons/{__version__} (+https://github.com/phd-commons/commons)"
 
 
 def _client(ws) -> httpx.Client:

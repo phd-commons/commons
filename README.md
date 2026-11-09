@@ -63,7 +63,7 @@ Start from a preset that suits your machine:
 You need Python 3.11 or later.
 
 ```bash
-pip install "phd-commons @ git+https://github.com/alexkovaceski/phd-commons"
+pip install "phd-commons @ git+https://github.com/phd-commons/commons"
 commons init ~/Commons --preset ollama --title "My thesis"
 cd ~/Commons
 commons doctor
