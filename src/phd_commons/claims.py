@@ -60,8 +60,9 @@ def process_source_claims(ws, store, router, source_id: int) -> dict:
     ptier = max_tier([s["tier"], thesis_tier(ws)])
     for ch in store.q("SELECT * FROM chunks WHERE source_id=? ORDER BY idx", (source_id,)):
         try:
-            reply = router.chat("worker", prompts.extract_claims(ch["text"], ch["page_from"], props, max_claims),
-                                app="claims/extract", tier=ptier, source_ids=[source_id], json_mode=True)
+            reply = router.chat("worker", prompts.extract_claims(ch["text"], ch["page_from"], None, max_claims),
+                                app="claims/extract", tier=s["tier"], source_ids=[source_id], json_mode=True,
+                                max_tokens=2048)
             items = extract_json(reply)
         except Exception as e:  # noqa: BLE001
             stats["failed_chunks"] += 1

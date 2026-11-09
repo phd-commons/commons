@@ -16,23 +16,23 @@ def props_block(props: list[dict]) -> str:
     return "<<<PROPOSITIONS\n" + "\n".join(lines) + "\nPROPOSITIONS>>>"
 
 
-def extract_claims(text: str, page: int | None, props: list[dict], max_claims: int) -> list[dict]:
+def extract_claims(text: str, page: int | None, props: list[dict] | None, max_claims: int) -> list[dict]:
+    """The student's propositions are deliberately left out: shown them, models keep only the claims they think are
+    relevant and drop the rest (found in live testing). Relevance is judged separately, in the linking step."""
     return [
         {"role": "system", "content": (
-            "You extract verifiable claims from research documents for a doctoral student. "
-            "A claim is a single statement the source makes (a finding, a figure, a legal provision, a theoretical "
-            "proposition or an argued position). Every claim must come with a VERBATIM quote copied character for "
-            "character from the text that states it. Never paraphrase inside the quote. Extract claims that cut "
-            "against the student's propositions as readily as claims that support them. "
-            "Return only a JSON array.")},
+            "You extract verifiable claims from research documents. A claim is a single statement the source makes: "
+            "a finding, a figure, a method detail that matters, a legal provision, a theoretical proposition or an "
+            "argued position. Every claim must come with a VERBATIM quote copied character for character from the "
+            "text. Never paraphrase inside the quote. Return only a JSON array.")},
         {"role": "user", "content": (
-            f"Extract at most {max_claims} important claims from the text below.\n"
-            "Return a JSON array of objects with keys: claim, quote, page, claim_type "
-            "(one of empirical, statistic, legal, theoretical, normative).\n"
-            "If the text holds no substantive claim, return [].\n\n"
+            f"<<<TEXT\n{text}\nTEXT>>>\n\n"
             f"PAGE: {page if page is not None else ''}\n"
-            f"The student's propositions, for context only:\n{props_block(props)}\n\n"
-            f"<<<TEXT\n{text}\nTEXT>>>")},
+            f"Extract up to {max_claims} of the most important claims from the text above. Return a JSON array of "
+            "objects with keys claim, quote, page, claim_type (one of empirical, statistic, legal, theoretical, "
+            "normative). Research text almost always states findings, figures, methods or arguments, so extract "
+            "them. Return [] only for boilerplate such as reference lists, acknowledgements, licence notices or a "
+            "table of contents.")},
     ]
 
 

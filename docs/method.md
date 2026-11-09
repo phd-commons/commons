@@ -38,8 +38,9 @@ shows you the evidence each way; the status of each proposition is yours to set.
 
 ## 4. Disconfirmation is first class
 
-Every stage looks for evidence against your argument as hard as evidence for it. Claim extraction is asked for
-claims that cut against the propositions. The daily screen keeps items that challenge a proposition even when they
+Every stage looks for evidence against your argument as hard as evidence for it. Claim extraction never sees
+your propositions, so it cannot quietly skip inconvenient findings; a separate step then judges which claims
+support, contradict or qualify each proposition. The daily screen keeps items that challenge a proposition even when they
 score low on relevance. The thesis board shows the strongest evidence against each proposition and flags any
 proposition for which none has been found yet. The devil's advocate mode in Ask argues the examiner's case from
 your own corpus.

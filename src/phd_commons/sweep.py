@@ -266,6 +266,10 @@ def _ingest_item(ws, store, router, it, feed) -> str:
                             return "full-text"
         except Exception:  # noqa: BLE001
             pass
+    if not it.get("abstract") and it.get("doi"):
+        _enrich_from_openalex(ws, it)  # Crossref often carries no abstract; OpenAlex often does
+        if it.get("pdf_url"):
+            return _retry_pdf(ws, store, router, it, feed, meta)
     if not it.get("abstract"):
         return "skipped-no-text"
     with tempfile.TemporaryDirectory() as td:
@@ -275,6 +279,37 @@ def _ingest_item(ws, store, router, it, feed) -> str:
         meta["kind"] = "abstract"
         res = ingest_file(ws, store, router, p, tier="PUBLIC", meta=meta, min_chars=150)
     return "abstract-only" if res.status == "ingested" else f"failed: {res.message}"
+
+
+def _enrich_from_openalex(ws, it) -> None:
+    params = {}
+    if os.environ.get("OPENALEX_API_KEY"):
+        params["api_key"] = os.environ["OPENALEX_API_KEY"]
+    try:
+        with _client(ws) as http:
+            r = _get(http, f"https://api.openalex.org/works/doi:{it['doi']}", params, tries=1)
+            if r.status_code == 200:
+                w = r.json()
+                it["abstract"] = it.get("abstract") or _abstract_from_inverted(w.get("abstract_inverted_index"))
+                it["pdf_url"] = it.get("pdf_url") or (w.get("best_oa_location") or {}).get("pdf_url")
+    except Exception:  # noqa: BLE001 - enrichment is best effort
+        pass
+
+
+def _retry_pdf(ws, store, router, it, feed, meta) -> str:
+    try:
+        with _client(ws) as http:
+            r = http.get(it["pdf_url"])
+            if r.status_code == 200 and b"%PDF" in r.content[:1024]:
+                with tempfile.TemporaryDirectory() as td:
+                    p = Path(td) / "item.pdf"
+                    p.write_bytes(r.content)
+                    if ingest_file(ws, store, router, p, tier="PUBLIC", meta=meta).status == "ingested":
+                        return "full-text"
+    except Exception:  # noqa: BLE001
+        pass
+    it["pdf_url"] = None
+    return _ingest_item(ws, store, router, it, feed)
 
 
 def _write_rejections(ws, report) -> None:

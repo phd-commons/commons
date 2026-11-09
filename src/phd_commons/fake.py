@@ -61,7 +61,7 @@ def fake_chat(app: str, messages: list[dict]) -> str:
     user = "\n".join(m["content"] for m in messages if m["role"] == "user")
     if app.startswith("claims/extract"):
         text = _between(user, "<<<TEXT", "TEXT>>>")
-        page = _between(user, "PAGE:", "\n") or None
+        page = (_between(user, "PAGE:", "\n") or "").strip() or None
         sents = _sentences(text)[:2]
         return json.dumps([{"claim": s, "quote": s, "page": int(page) if page and page.isdigit() else None,
                             "claim_type": "empirical"} for s in sents])
