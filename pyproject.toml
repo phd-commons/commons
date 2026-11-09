@@ -1,6 +1,6 @@
 [project]
 name = "phd-commons"
-version = "0.1.0"
+version = "0.1.1"
 description = "A local-first research system for doctoral students: a knowledge base with verified claims, a daily research feed, grounded Q&A, thesis testing and exports. Bring your own LLM."
 readme = "README.md"
 requires-python = ">=3.11"

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 (2026-11-09)
+
+- `commons mcp install claude-desktop | claude-code | print` registers the MCP server with one command.
+- New MCP tools: `ask_corpus` (grounded answers from your local author model), `thesis_board`,
+  `add_published_work` (by DOI) and `corpus_status`; server instructions tell assistants to cite and to say when
+  the corpus does not hold something.
+- Fixes from the pre-release review: tier floors, scrubbed backups, safe rebuild, portal origin checks, and more.
+
 ## 0.1.0 (2026-11-09)
 
 First public release.

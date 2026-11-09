@@ -327,3 +327,34 @@ def write_digest(ws, store, date: str | None = None) -> Path:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     append_log(ws, f"digest {date}: {len(kept)} items")
     return path
+
+
+def add_by_identifier(ws, store, router, ident: str) -> dict:
+    """Add one published work by DOI (or doi.org URL) as PUBLIC: open-access full text if lawful, else abstract."""
+    ident = ident.strip()
+    doi = re.sub(r"^(https?://(dx\.)?doi\.org/|doi:)", "", ident, flags=re.I)
+    if not re.match(r"^10\.\d{4,9}/\S+$", doi):
+        return {"status": "refused", "message": "give a DOI such as 10.1234/abcd or a doi.org link"}
+    params = {}
+    key = os.environ.get("OPENALEX_API_KEY")
+    if key:
+        params["api_key"] = key
+    with _client(ws) as http:
+        r = _get(http, f"https://api.openalex.org/works/doi:{doi}", params)
+        if r.status_code == 404:
+            return {"status": "failed", "message": f"OpenAlex has no record of {doi}"}
+        if r.status_code >= 400:
+            return {"status": "failed", "message": f"OpenAlex returned {r.status_code}"}
+        w = r.json()
+    oa = w.get("best_oa_location") or {}
+    it = {"title": w.get("display_name") or doi, "abstract": _abstract_from_inverted(w.get("abstract_inverted_index")),
+          "doi": doi, "url": (w.get("primary_location") or {}).get("landing_page_url") or f"https://doi.org/{doi}",
+          "year": w.get("publication_year"), "published_at": w.get("publication_date"),
+          "authors": [a["author"]["display_name"] for a in w.get("authorships", [])[:8]],
+          "venue": ((w.get("primary_location") or {}).get("source") or {}).get("display_name"),
+          "pdf_url": oa.get("pdf_url"), "licence": oa.get("license")}
+    if _seen(store, it):
+        return {"status": "duplicate", "message": "already in the corpus", "title": it["title"]}
+    res = _ingest_item(ws, store, router, it, {"id": "manual", "source_kind": "article"})
+    return {"status": "added" if res in ("full-text", "abstract-only") else "failed", "message": res,
+            "title": it["title"], "year": it["year"]}

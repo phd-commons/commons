@@ -29,8 +29,11 @@ every claim tied to a verbatim quote and a page number.
   workbooks, BibTeX and RIS.
 - **Takes your own documents.** Drop files into a folder or upload them in the portal. Interview recordings are
   transcribed locally and never leave the machine.
-- **Works with your agent.** A local web portal, a `commons` command line and an MCP server, plus setup skills
-  that let a coding agent such as Claude Code tailor the whole system to your proposal.
+- **Works with your assistant.** An MCP server lets Claude, or any other assistant that speaks MCP, search your
+  corpus, ask it questions and add papers by DOI. One command registers it: `commons mcp install claude-desktop`.
+  Commons decides what the assistant may see. See [docs/mcp.md](docs/mcp.md).
+- **Sets itself up.** Setup skills let a coding agent such as Claude Code tailor the whole system to your
+  proposal, and there is a local web portal and a `commons` command line.
 
 ## Bring your own LLM
 
@@ -85,6 +88,7 @@ commons sweep                 # today's research feed and digest
 commons ask "What evidence is there against P1?" --export docx
 commons serve                 # portal at http://127.0.0.1:8700
 commons schedule install      # daily sweep, digest and backup
+commons mcp install claude-desktop   # use your corpus from Claude
 ```
 
 To see it work with no models installed at all, use `--preset demo` and one of the worked examples:
@@ -123,7 +127,8 @@ rough edges, and please report them.
 - [docs/method.md](docs/method.md): the research method the system enforces
 - [docs/models.md](docs/models.md): bring your own LLM, sizing and providers
 - [docs/data-and-ethics.md](docs/data-and-ethics.md): tiers, ethics approval and what never to put in
-- [docs/agents.md](docs/agents.md): using Commons with Claude Code and other coding agents
+- [docs/mcp.md](docs/mcp.md): using your corpus from Claude Desktop, Claude Code and other MCP clients
+- [docs/agents.md](docs/agents.md): setting Commons up with Claude Code and other coding agents
 - [docs/architecture.md](docs/architecture.md): how it fits together
 - [docs/ai-use-statement.md](docs/ai-use-statement.md): a template for your methodology chapter
 

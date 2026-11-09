@@ -187,11 +187,36 @@ def serve(workspace: Optional[Path] = WS_OPT, port: Optional[int] = None):
     uvicorn.run(create_app(str(ws.root)), host=host, port=port or ws.get("portal.port", 8700), log_level="warning")
 
 
-@app.command()
-def mcp(workspace: Optional[Path] = WS_OPT):
-    """Run the MCP server on stdio (configure your agent to launch `commons mcp -w <workspace>`)."""
-    from .mcp_server import main
-    main(str(workspace) if workspace else None)
+mcp_app = typer.Typer(help="Use your corpus from Claude or any other MCP client.", invoke_without_command=True)
+app.add_typer(mcp_app, name="mcp")
+
+
+@mcp_app.callback()
+def mcp(ctx: typer.Context, workspace: Optional[Path] = WS_OPT):
+    """Run the MCP server on stdio. Clients launch this; use `commons mcp install` to register it."""
+    if ctx.invoked_subcommand is None:
+        from .mcp_server import main
+        main(str(workspace) if workspace else None)
+
+
+@mcp_app.command("install")
+def mcp_install(client: str = typer.Argument("print", help="claude-desktop | claude-code | print"),
+                workspace: Optional[Path] = WS_OPT):
+    """Register this workspace's MCP server with Claude Desktop or Claude Code, or print the entry for any client."""
+    from . import mcp_install as mi
+    from .config import load_workspace
+    ws = load_workspace(workspace)
+    if client == "claude-desktop":
+        typer.echo(mi.install_claude_desktop(ws))
+    elif client == "claude-code":
+        typer.echo(mi.install_claude_code(ws))
+    elif client == "print":
+        typer.echo("Add this to your MCP client's configuration:\n" + mi.snippet(ws))
+        typer.echo("\nClaude Code: " + mi.manual_claude_code(ws))
+    else:
+        raise typer.BadParameter("choose claude-desktop, claude-code or print")
+    typer.echo("The server serves PUBLIC material only unless you set mcp.private: true in commons.yaml. "
+               "Interview and other RESTRICTED material is never served.")
 
 
 @app.command()

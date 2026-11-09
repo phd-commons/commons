@@ -11,7 +11,10 @@ try:  # mcp 2.x
 except ImportError:  # mcp 1.x
     from mcp.server.fastmcp import FastMCP
 
+from .ask import ask as do_ask
 from .ask import caller_tiers, retrieve
+from .sweep import add_by_identifier
+from .thesis import board
 from .claims import thesis_tier
 from .config import load_workspace
 from .llm import Router
@@ -27,7 +30,11 @@ def build_server(ws_path: str | None = None) -> FastMCP:
     router = Router(ws, store)
     sync_propositions(ws, store)
     tiers = caller_tiers(ws, "mcp")
-    mcp = FastMCP("commons")
+    mcp = FastMCP("commons", instructions=(
+        "Commons is a doctoral student's local research corpus. Every claim in it is tied to a verbatim quote. "
+        "Use search_corpus or ask_corpus before answering questions about the student's research, cite the "
+        "sources it returns, and say plainly when the corpus does not hold something. Never present your own "
+        "knowledge as if it came from the corpus. Interview and other ethics-protected material is never served."))
 
     @mcp.tool()
     def search_corpus(query: str, top_k: int = 8) -> list[dict]:
@@ -70,6 +77,37 @@ def build_server(ws_path: str | None = None) -> FastMCP:
             return f"The digest names your propositions, which are {thesis_tier(ws)} material; not served over MCP."
         ds = sorted((ws.okf / "digests").glob("20*.md"))
         return ds[-1].read_text(encoding="utf-8") if ds else "No digest yet."
+
+    @mcp.tool()
+    def ask_corpus(question: str, mode: str = "answer") -> dict:
+        """Ask a question of the corpus. Commons answers with its own local author model, from passages the MCP
+        client is allowed to see, citing them as [n]; or says the corpus does not hold the answer.
+        mode: answer, devil (strongest case against), compare, notes."""
+        a = do_ask(ws, store, router, question, mode=mode if mode in ("answer", "devil", "compare", "notes") else "answer",
+                   caller="mcp")
+        return {"answer": a.text, "abstained": a.abstained, "checks_failed": a.problems,
+                "sources": [{"n": i, "source_id": p["source_id"], "title": p["title"], "year": p["year"],
+                             "page": p["page_from"]} for i, p in enumerate(a.passages, 1)]}
+
+    @mcp.tool()
+    def thesis_board() -> list[dict]:
+        """Evidence for and against each proposition and rival explanation (counts of verified claims)."""
+        if thesis_tier(ws) not in tiers:
+            return [{"error": f"propositions are {thesis_tier(ws)} material and not served to MCP clients"}]
+        return [{k: r[k] for k in ("code", "family", "title", "statement", "status", "supports", "contradicts",
+                                    "qualifies")} for r in board(store, include_restricted=False)]
+
+    @mcp.tool()
+    def add_published_work(doi: str) -> dict:
+        """Add a published work to the corpus by DOI. Commons fetches the open-access full text where a lawful copy
+        exists, otherwise the abstract, then extracts and verifies its claims. Stored as PUBLIC."""
+        return add_by_identifier(ws, store, router, doi)
+
+    @mcp.tool()
+    def corpus_status() -> dict:
+        """Counts of sources, verified claims and open review items, and which tiers this client may see."""
+        c = store.counts()
+        return {**c, "tiers_served_to_this_client": sorted(tiers)}
 
     @mcp.tool()
     def add_note(title: str, text: str) -> str:
