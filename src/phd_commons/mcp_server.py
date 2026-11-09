@@ -122,4 +122,7 @@ def build_server(ws_path: str | None = None) -> FastMCP:
 
 
 def main(ws_path: str | None = None) -> None:
+    import logging
+    for name in ("httpx", "httpcore", "mcp"):
+        logging.getLogger(name).setLevel(logging.WARNING)  # one line per model call floods the client's log
     build_server(ws_path).run()

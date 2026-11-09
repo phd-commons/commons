@@ -109,11 +109,16 @@ def check_answer(text: str, passages: list[dict]) -> list[str]:
     for q in re.findall(r"\"([^\"]{12,})\"", text):
         if not any(norm_for_match(q) in norm_for_match(p["text"]) for p in passages):
             problems.append(f"quoted text not found in the passages: \"{q[:60]}\"")
-    for sent in re.split(r"(?<=[.!?])\s+", text):
+    for sent in _SENTENCE_END.split(text):
         if re.search(r"\d", re.sub(r"\[\d+\]", "", sent)) and not re.search(r"\[\d+\]", sent) \
                 and not sent.lstrip().startswith(("|", "#", "-")) and len(sent) > 25:
             problems.append(f"number without a citation: \"{sent.strip()[:60]}\"")
     return problems
+
+
+# A sentence ends at . ! or ? followed by a capital, a bracket or a quote, but not after an initial or a common
+# abbreviation ("U.S. cities", "et al. found").
+_SENTENCE_END = re.compile(r"(?<![A-Z]\.)(?<!\bal\.)(?<!\be\.g\.)(?<!\bi\.e\.)(?<=[.!?])\s+(?=[A-Z0-9\[(\"'])")
 
 
 def ask(ws, store, router, question: str, mode: str = "answer", caller: str = "local",

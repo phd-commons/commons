@@ -170,3 +170,10 @@ def test_single_object_json_replies_are_kept():
     assert _as_list({"links": None}, "links") == []
     assert _as_list([one], "links") == [one]
     assert _as_list("x", "links") == []
+
+
+def test_citation_check_does_not_split_on_abbreviations():
+    from phd_commons.ask import _SENTENCE_END
+    text = "Additionally, modelling across 11 northeastern U.S. cities found X [1]. Smith et al. report 3 cases [2]."
+    parts = _SENTENCE_END.split(text)
+    assert len(parts) == 2 and all("[" in p for p in parts)
