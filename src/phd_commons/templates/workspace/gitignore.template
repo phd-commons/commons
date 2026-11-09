@@ -1,0 +1,12 @@
+# Commons workspace. Keep RESTRICTED material out of any repository.
+data/
+logs/
+library/restricted/
+inbox/
+quarantine/
+okf/restricted/
+exports/
+.env
+*.db
+*.db-wal
+*.db-shm

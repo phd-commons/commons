@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Doctor{% endblock %}
+{% block body %}
+<h1>Doctor <span class="pill {{ level }}">{{ level }}</span></h1>
+<h2>Models</h2>
+<div class="card scroll"><table>
+  <tr><th>Role</th><th>Provider</th><th>Kind</th><th>Model</th><th>Locality</th><th>Family</th><th>Local fallback</th></tr>
+  {% for r in roles %}<tr><td>{{ r.role }}</td><td>{{ r.provider }}</td><td>{{ r.kind }}</td><td>{{ r.model }}</td><td>{{ r.locality }}</td><td>{{ r.family }}</td><td>{{ r.fallback }}</td></tr>{% endfor %}
+</table></div>
+<h2>Checks</h2>
+<div class="card scroll"><table>
+  {% for c in checks %}<tr><td><span class="pill {{ c.level }}">{{ c.level }}</span></td><td>{{ c.name }}</td><td>{{ c.detail }}</td><td class="muted">{{ c.fix }}</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

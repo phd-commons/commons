@@ -1,0 +1,11 @@
+# Worked example feed for the fictional heat-and-health thesis.
+queries:
+  - heat wave emergency hospital admissions Australia
+  - extreme heat morbidity time series
+  - heat health warning system evaluation
+  - urban tree canopy heat related illness
+  - mortality displacement harvesting heat waves
+  - ozone bushfire smoke confounding heat health
+feeds:
+  - {id: openalex, kind: openalex}
+  - {id: crossref, kind: crossref}

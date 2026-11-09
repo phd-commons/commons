@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block title %}{{ p.code }}{% endblock %}
+{% block body %}
+<h1>{{ p.code }} {{ p.title or "" }} <span class="pill">{{ p.status }}</span></h1>
+<div class="card">
+  <p>{{ p.statement }}</p>
+  {% if p.supports_if %}<p class="small"><strong>Supports if:</strong> {{ p.supports_if }}</p>{% endif %}
+  {% if p.disconfirms_if %}<p class="small"><strong>Disconfirms if:</strong> {{ p.disconfirms_if }}</p>{% endif %}
+</div>
+{% for stance in ["contradicts", "qualifies", "supports", "context"] %}
+<h2>{{ stance | capitalize }}</h2>
+{% for e in ev if e.stance == stance %}
+<div class="card small">
+  <strong>{{ e.title }}</strong> <span class="muted">({{ e.year or "n.d." }}{% if e.page %}, p. {{ e.page }}{% endif %}) · {{ e.tier }}</span>
+  <blockquote>{{ e.quote }}</blockquote>
+  {% if e.confirmed %}<span class="pill GREEN">confirmed</span>{% else %}
+  <form class="inline" method="post" action="/link/{{ e.id }}/{{ p.code }}/accept"><button>Confirm</button></form>
+  <form class="inline" method="post" action="/link/{{ e.id }}/{{ p.code }}/reject"><button class="ghost">Reject link</button></form>{% endif %}
+</div>
+{% else %}<p class="muted small">None yet.</p>{% endfor %}
+{% endfor %}
+{% endblock %}

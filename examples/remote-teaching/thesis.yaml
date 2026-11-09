@@ -1,0 +1,49 @@
+# Worked example (fictional thesis) in education, built around interviews. Shows propositions and rivals for
+# qualitative work, where "testing" means searching for disconfirming cases as hard as confirming ones.
+research_questions:
+  primary: >
+    Why do early-career teachers leave remote schools within three years, and what keeps the ones who stay?
+  RQ2: How do school leaders and communities shape a new teacher's first year?
+  RQ3: Which retention policies do teachers themselves credit, and which do they ignore?
+
+propositions:
+  - code: P1
+    title: Isolation drives exits
+    statement: >
+      Professional isolation (no colleagues in the same subject, little mentoring) matters more to early exits than
+      pay or housing.
+    supports_if: Leavers describe isolation as decisive; stayers describe a mentor or network that offset it.
+    disconfirms_if: Leavers rank pay, housing or family reasons first and rarely mention isolation.
+    status: untested
+  - code: P2
+    title: Community belonging retains
+    statement: >
+      Teachers who build relationships outside the school in their first term are more likely to stay.
+    supports_if: Stayers describe early community ties; leavers describe none.
+    disconfirms_if: Stayers and leavers report similar community ties.
+    status: untested
+  - code: P3
+    title: Incentives are discounted
+    statement: >
+      Financial retention incentives are valued at the point of recruitment but carry little weight in decisions to
+      stay.
+    supports_if: Teachers describe incentives as a reason to come, not a reason to stay.
+    disconfirms_if: Teachers who stayed cite incentives as a main reason.
+    status: untested
+
+rivals:
+  - code: R1
+    title: Planned short stays
+    statement: >
+      Many early-career teachers always intended a two or three year remote posting, so exits reflect plans, not
+      failures of support.
+    supports_if: Leavers say they left on schedule.
+    disconfirms_if: Leavers describe leaving earlier than they planned.
+    status: untested
+  - code: R2
+    title: Leadership turnover
+    statement: >
+      Exits follow principal turnover; teacher-level factors matter less than leadership instability.
+    supports_if: Exit clusters coincide with changes of principal.
+    disconfirms_if: Exits are spread evenly regardless of leadership change.
+    status: untested

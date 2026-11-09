@@ -1,0 +1,17 @@
+# Changelog
+
+## 0.1.0 (2026-11-09)
+
+First public release.
+
+- Workspaces with a plain-Markdown knowledge base (OKF) as the source of truth, and `commons rebuild`.
+- Bring your own LLM: role-based router for OpenAI-compatible servers, Anthropic and local sentence-transformers,
+  with locality labels (local, institutional, cloud) and enforced tier policy.
+- Ingest of PDF, Word, HTML, Markdown and audio (local transcription), with quarantine on protective markings.
+- Claims with mechanical quote checks, cross-family verification and a review queue.
+- Propositions and rivals, evidence links and the thesis board.
+- Daily sweep (OpenAlex, Crossref, arXiv, RSS), relevance screening that keeps challenging work, digests.
+- Grounded Ask with citation checks and four modes; Word, Excel, BibTeX and RIS exports.
+- Analysis-module contract with stamps; two built-ins.
+- Portal, CLI, MCP server, doctor, schedules for macOS, Linux and Windows without admin rights, backup and purge.
+- Agent layer: AGENTS.md, CLAUDE.md and setup and analysis skills in every workspace.

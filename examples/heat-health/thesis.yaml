@@ -1,0 +1,63 @@
+# Worked example (fictional thesis). Use it to see how a thesis becomes testable propositions and rivals.
+research_questions:
+  primary: >
+    How do extreme heat events affect emergency hospital admissions in Australian cities, and which local
+    adaptations reduce that effect?
+  RQ2: Which population groups carry the excess admissions?
+  RQ3: Do heat-health warning systems and urban cooling programmes change the dose-response relationship?
+
+propositions:
+  - code: P1
+    title: Heat raises admissions
+    statement: >
+      Emergency hospital admissions rise measurably on days above a city-specific heat threshold, after adjusting
+      for season, day of week and air pollution.
+    supports_if: Time-series studies in Australian cities find a positive, lagged association with admissions.
+    disconfirms_if: The association disappears after adjustment for pollution, holidays or reporting artefacts.
+    status: untested
+  - code: P2
+    title: Older and isolated people carry the burden
+    statement: >
+      Most excess heat admissions occur among people over 75 and people living alone.
+    supports_if: Stratified analyses show the largest relative risks in these groups.
+    disconfirms_if: Working-age outdoor workers or children carry a comparable or larger share.
+    status: untested
+  - code: P3
+    title: Warnings work
+    statement: >
+      Cities with operating heat-health warning systems show a flatter dose-response curve after the systems began.
+    supports_if: Before-and-after or difference-in-differences studies find reduced risk after introduction.
+    disconfirms_if: No change after introduction, or changes that also appear in cities without warnings.
+    status: untested
+  - code: P4
+    title: Tree canopy protects
+    statement: >
+      Suburbs with more tree canopy have lower heat-related admission rates, holding income constant.
+    supports_if: Small-area studies find canopy is protective net of socioeconomic status.
+    disconfirms_if: The canopy effect vanishes once income and housing quality are controlled.
+    status: untested
+
+rivals:
+  - code: R1
+    title: Harvesting
+    statement: >
+      Heat brings forward admissions that would have happened within days anyway, so the net effect over a summer
+      is small.
+    supports_if: Admissions dip below baseline in the week after heatwaves.
+    disconfirms_if: No post-heatwave deficit.
+    status: untested
+  - code: R2
+    title: Air pollution, not heat
+    statement: >
+      The apparent heat effect is driven by ozone and bushfire smoke that coincide with hot days.
+    supports_if: Effects attenuate sharply when pollution is modelled.
+    disconfirms_if: Effects persist on hot days with low pollution.
+    status: untested
+  - code: R3
+    title: Adaptation over time
+    statement: >
+      Populations acclimatise and air-conditioning spreads, so the heat effect has declined regardless of any
+      programme.
+    supports_if: Declining effects in cities with no new programmes.
+    disconfirms_if: Stable or rising effects in the comparison cities.
+    status: untested

@@ -1,0 +1,10 @@
+# Worked example feed for the fictional remote-teaching thesis.
+queries:
+  - early career teacher attrition rural remote schools
+  - teacher retention incentives evaluation
+  - professional isolation beginning teachers mentoring
+  - principal turnover teacher retention
+  - teachers who planned short rural placements
+feeds:
+  - {id: openalex, kind: openalex}
+  - {id: crossref, kind: crossref}

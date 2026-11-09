@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block title %}Review{% endblock %}
+{% block body %}
+<h1>Review</h1>
+<p class="muted">Ten minutes a day keeps the evidence honest. Claims here quote their source verbatim but the verifier hesitated; links are a model's proposal until you confirm them.</p>
+<h2>Items ({{ items|length }})</h2>
+{% for i in items %}
+<div class="card small">
+  <span class="pill AMBER">{{ i.kind }}</span>
+  {% if i.kind == "claim" %}
+    <p><strong>Claim:</strong> {{ i.payload.claim }}</p><blockquote>{{ i.payload.quote }}</blockquote>
+    <p class="muted">Verifier said: {{ i.payload.verdict }}</p>
+  {% else %}<pre class="small">{{ i.payload | tojson(indent=1) }}</pre>{% endif %}
+  <form class="inline" method="post" action="/review/{{ i.id }}/accept"><button>Accept</button></form>
+  <form class="inline" method="post" action="/review/{{ i.id }}/reject"><button class="ghost">Reject</button></form>
+</div>
+{% else %}<p class="muted">Nothing waiting.</p>{% endfor %}
+<h2>Proposed evidence links ({{ links|length }})</h2>
+{% for l in links %}
+<div class="card small">
+  <strong>{{ l.proposition_code }}</strong> · <em>{{ l.stance }}</em> · {{ l.title }}
+  <blockquote>{{ l.quote }}</blockquote>
+  {% if l.note %}<p class="muted">Model's reason: {{ l.note }}</p>{% endif %}
+  <form class="inline" method="post" action="/review-link/{{ l.claim_id }}/{{ l.proposition_code }}/accept"><button>Confirm</button></form>
+  <form class="inline" method="post" action="/review-link/{{ l.claim_id }}/{{ l.proposition_code }}/reject"><button class="ghost">Reject</button></form>
+</div>
+{% else %}<p class="muted">No proposed links.</p>{% endfor %}
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block title %}Library{% endblock %}
+{% block body %}
+<h1>Library</h1>
+<form class="card row" method="post" action="/library/upload" enctype="multipart/form-data">
+  <input type="file" name="file" required>
+  <select name="tier" style="width:auto">
+    <option value="PRIVATE">PRIVATE (your notes, drafts)</option>
+    <option value="PUBLIC">PUBLIC (published material)</option>
+    <option value="RESTRICTED">RESTRICTED (interviews, ethics-protected)</option>
+  </select>
+  <button type="submit">Add to inbox</button>
+  <span class="muted small">Or drop files into <code>inbox/</code> (or <code>inbox/restricted/</code>). Processed every 30 seconds. Last check {{ inbox.inbox_last or "not yet" }}.</span>
+</form>
+<div class="row small">
+  {% for s in ["ingested","failed","quarantined","archived"] %}<a class="btn {% if s != status %}ghost{% endif %}" href="/library?status={{ s }}">{{ s }}</a>{% endfor %}
+</div>
+<div class="card scroll"><table>
+  <tr><th>Title</th><th>Year</th><th>Kind</th><th>Tier</th><th>{% if status == "ingested" %}Feed{% else %}Reason{% endif %}</th></tr>
+  {% for r in rows %}
+  <tr><td><a href="/source/{{ r.id }}">{{ r.title }}</a></td><td>{{ r.year or "" }}</td><td>{{ r.kind }}</td><td>{{ r.tier }}</td>
+      <td class="muted small">{{ r.origin_feed or "" if status == "ingested" else r.fail_reason }}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">Nothing here.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}Digest {{ name }}{% endblock %}
+{% block body %}
+<div class="row small">{% for d in all|reverse %}{% if loop.index <= 14 %}<a class="btn {% if d != name %}ghost{% endif %}" href="/digest/{{ d }}">{{ d }}</a>{% endif %}{% endfor %}</div>
+<div class="card">{{ text | md }}</div>
+{% endblock %}

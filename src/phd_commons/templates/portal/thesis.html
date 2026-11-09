@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block title %}Thesis{% endblock %}
+{% block body %}
+<h1>Thesis board</h1>
+<p class="muted">Evidence for and against each proposition and rival explanation. Counts are verified claims; the figure in brackets is how many links you have confirmed. Status is yours to set in <code>thesis.yaml</code>; Commons never changes it.</p>
+<div class="card scroll"><table>
+  <tr><th>Code</th><th>Proposition</th><th>For</th><th>Against</th><th>Qualifies</th><th>Status</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td><a href="/thesis/{{ r.code }}"><strong>{{ r.code }}</strong></a><div class="muted small">{{ r.family }}</div></td>
+    <td><strong>{{ r.title or "" }}</strong><div class="small">{{ r.statement }}</div>
+      {% if r.top_against %}<div class="small bad">Strongest against: “{{ r.top_against[0].quote[:160] }}” ({{ r.top_against[0].title }})</div>{% endif %}
+    </td>
+    <td class="good">{{ r.supports }} <span class="muted">({{ r.supports_confirmed }})</span></td>
+    <td class="bad">{{ r.contradicts }} <span class="muted">({{ r.contradicts_confirmed }})</span></td>
+    <td>{{ r.qualifies }} <span class="muted">({{ r.qualifies_confirmed }})</span></td>
+    <td><span class="pill">{{ r.status }}</span>{% if r.contradicts == 0 %}<div class="small warn">no disconfirming evidence found yet</div>{% endif %}</td>
+  </tr>
+  {% else %}<tr><td colspan="6" class="muted">No propositions. Write thesis.yaml in your workspace.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

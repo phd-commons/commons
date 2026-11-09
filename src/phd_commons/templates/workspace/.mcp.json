@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "commons": {
+      "command": "commons",
+      "args": ["mcp", "-w", "."]
+    }
+  }
+}

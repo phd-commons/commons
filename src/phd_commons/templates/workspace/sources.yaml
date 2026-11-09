@@ -1,0 +1,11 @@
+# The daily research feed. The commons-setup skill fills in queries and field-specific feeds from your proposal.
+# Kinds: openalex, crossref, arxiv (set categories), rss (set url). Every feed is checked live before it stays.
+
+queries: []
+#  - "a precise search phrase for your topic"
+
+feeds:
+  - {id: openalex, kind: openalex}
+  - {id: crossref, kind: crossref}
+#  - {id: arxiv, kind: arxiv, categories: [cs.CY]}
+#  - {id: a-regulator, kind: rss, url: "https://example.org/news/feed.xml", name: "Regulator news"}

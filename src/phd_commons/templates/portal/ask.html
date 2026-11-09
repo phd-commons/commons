@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% block title %}Ask{% endblock %}
+{% block body %}
+<h1>Ask your corpus</h1>
+<form class="card" method="post" action="/ask">
+  <textarea name="question" rows="3" placeholder="What does the literature say about ...?" required>{{ answer.question if answer else "" }}</textarea>
+  <div class="row" style="margin-top:10px">
+    <select name="mode" style="width:auto">
+      {% for m, label in [("answer","Answer"),("devil","Devil's advocate"),("compare","Compare"),("notes","Draft reading notes")] %}
+      <option value="{{ m }}" {% if answer and answer.mode == m %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button type="submit">Ask</button>
+    <span class="muted small">Answers come only from your corpus, with citations. Say "make a chart of ..." to get a figure from a stored table.</span>
+  </div>
+</form>
+{% if answer %}
+<div class="card answer">
+  {% if answer.abstained %}<p class="warn"><strong>Not in the corpus.</strong></p>{% endif %}
+  {{ answer.text | cite }}
+  {% if answer.problems %}<p class="warn small">Checks that did not pass: {{ answer.problems | join("; ") }}</p>{% endif %}
+  <div class="row small">
+    <a class="btn" href="/export/{{ aid }}/docx">Word report</a>
+    <a class="btn ghost" href="/export/{{ aid }}/xlsx">Excel</a>
+    <a class="btn ghost" href="/export/{{ aid }}/bib">BibTeX</a>
+    <a class="btn ghost" href="/export/{{ aid }}/ris">RIS</a>
+  </div>
+</div>
+<h2>Passages</h2>
+{% for p in answer.passages %}
+<div class="card small" id="p{{ loop.index }}">
+  <strong>[{{ loop.index }}]</strong> <a href="/source/{{ p.source_id }}">{{ p.title }}</a>
+  <span class="muted">({{ p.year or "n.d." }}{% if p.page_from %}, p. {{ p.page_from }}{% endif %}) · {{ p.tier }}</span>
+  <blockquote>{{ p.text[:1200] }}{% if p.text|length > 1200 %}…{% endif %}</blockquote>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

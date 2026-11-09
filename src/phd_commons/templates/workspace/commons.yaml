@@ -1,0 +1,50 @@
+project:
+  title: ""
+  candidate: ""
+  institution: ""
+  field: ""
+  citation_style: apa
+
+portal:
+  host: 127.0.0.1
+  port: 8700
+
+# What providers with locality: cloud may receive. RESTRICTED never goes to a cloud provider.
+cloud:
+  public: false
+  private: false
+
+# What the MCP server serves to agent clients. Assume those clients are cloud models.
+mcp:
+  public: true
+  private: false
+
+# Optional. Sent to scholarly APIs (OpenAlex, Crossref) that ask clients to identify themselves.
+contact_email: ""
+
+schedule:
+  sweep: "05:00"
+  digest: "06:30"
+  backup: "02:00"
+
+house_style:
+  paper: A4
+  font: Arial
+  heading_colour: 1F3864
+  justify: true
+
+# Material is quarantined (never ingested) if it carries any of these.
+tiers:
+  quarantine_markings: ["OFFICIAL: Sensitive", "OFFICIAL:Sensitive", "PROTECTED", "SECRET", "TOP SECRET", "CONFIDENTIAL", "CUI", "RESTRICTED - NOT FOR CIRCULATION"]
+  quarantine_phrases: ["Commercial-in-Confidence", "Commercial in Confidence", "Client Confidential", "Not for distribution", "Strictly confidential"]
+  blocked_names: []   # employers or clients whose documents must never enter the corpus
+
+# Your propositions and digests are drafts of your own thinking: PRIVATE unless you decide otherwise.
+thesis_tier: PRIVATE
+
+# Commons checks disk encryption itself on macOS. On Linux and Windows, turn on LUKS or BitLocker and then set
+# this to true, or RESTRICTED material will be refused.
+restricted:
+  encryption_confirmed: false
+
+# providers: and roles: are written by `commons init --preset ...`. See docs/models.md.

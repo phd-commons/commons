@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "Commons: a local-first research system for doctoral students"
+message: "If you use Commons in your research, please cite it as below."
+type: software
+authors:
+  - family-names: Kovaceski
+    given-names: Aco
+version: 0.1.0
+date-released: 2026-11-09
+license: Apache-2.0
+repository-code: "https://github.com/alexkovaceski/phd-commons"
+keywords: [doctoral research, knowledge base, retrieval-augmented generation, local LLM, research methods]

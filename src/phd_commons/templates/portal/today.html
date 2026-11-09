@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block title %}Today{% endblock %}
+{% block body %}
+<h1>Today <span class="pill {{ level }}">{{ level }}</span></h1>
+<div class="grid">
+  <div class="card stat"><b>{{ counts.sources }}</b><span>sources</span></div>
+  <div class="card stat"><b>{{ counts.claims_verified }}</b><span>verified claims</span></div>
+  <div class="card stat"><b><a href="/review">{{ counts.review_open }}</a></b><span>waiting in Review</span></div>
+  <div class="card stat"><b>{{ counts.failed }}</b><span>failed ingests</span></div>
+  <div class="card stat"><b>{{ counts.quarantined }}</b><span>quarantined</span></div>
+</div>
+{% if ambers %}
+<div class="card">
+  <h2 style="margin-top:0">Needs attention</h2>
+  <table>{% for c in ambers %}
+    <tr><td><span class="pill {{ c.level }}">{{ c.level }}</span></td><td>{{ c.name }}</td><td>{{ c.detail }}</td><td class="muted">{{ c.fix }}</td></tr>
+  {% endfor %}</table>
+</div>
+{% endif %}
+<div class="card">
+  {% if digest %}
+    <div class="muted small">Digest {{ digest_name }} · <a href="/digest/{{ digest_name }}">open</a></div>
+    {{ digest | md }}
+  {% else %}
+    <h2 style="margin-top:0">No digest yet</h2>
+    <p>Run <code>commons sweep</code> then <code>commons digest</code>, or install the daily schedule with <code>commons schedule install</code>.</p>
+  {% endif %}
+</div>
+<p class="muted small">Inbox last checked {{ inbox.inbox_last or "not yet" }}.
+{% for m in inbox.inbox_msgs %}<br>{{ m }}{% endfor %}</p>
+{% endblock %}

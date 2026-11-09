@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}{{ s.title }}{% endblock %}
+{% block body %}
+<h1>{{ s.title }}</h1>
+<p class="muted">{{ s.year or "n.d." }} · {{ s.kind }} · {{ s.tier }} · {{ s.status }}{% if s.doi %} · <a href="https://doi.org/{{ s.doi }}">doi:{{ s.doi }}</a>{% elif s.url %} · <a href="{{ s.url }}">link</a>{% endif %}
+ · <a href="/original/{{ s.id }}">open original</a></p>
+{% if s.fail_reason %}<p class="warn">{{ s.fail_reason }}</p>{% endif %}
+{% if s.abstract %}<div class="card small">{{ s.abstract }}</div>{% endif %}
+<h2>Claims</h2>
+{% for c in claims %}
+<div class="card small">
+  <span class="pill {% if c.status in ['verified','confirmed'] %}GREEN{% elif c.status == 'review' %}AMBER{% else %}RED{% endif %}">{{ c.status }}</span>
+  {% if c.page %}<span class="muted">p. {{ c.page }}</span>{% endif %}
+  <span class="muted">verifier: {{ c.verifier_verdict or "n/a" }}</span>
+  <blockquote>{{ c.quote }}</blockquote>
+  {% if c.links %}<div class="muted">Links: {{ c.links }}</div>{% endif %}
+</div>
+{% else %}<p class="muted">No claims extracted.</p>{% endfor %}
+{% endblock %}

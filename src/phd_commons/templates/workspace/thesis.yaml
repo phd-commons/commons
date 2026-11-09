@@ -1,0 +1,29 @@
+# Your thesis, as testable propositions. This file is yours: Commons reads it and never changes it.
+#
+# Write each proposition so evidence can bear on it, and say in advance what would support it and what would
+# count against it. Add rival explanations (family R): the accounts an examiner would offer instead of yours.
+# Commons searches for evidence against every proposition as hard as evidence for it.
+#
+# The commons-setup skill drafts this from your proposal. Edit it with your supervisors.
+
+research_questions:
+  primary: ""
+
+propositions: []
+#  - code: P1
+#    family: P
+#    title: Short name
+#    statement: >
+#      One testable sentence.
+#    supports_if: What you would expect to find if it is right.
+#    disconfirms_if: What you would expect to find if it is wrong.
+#    status: untested        # untested | emerging | supported | contested | not_supported (you set this)
+
+rivals: []
+#  - code: R1
+#    title: The obvious alternative explanation
+#    statement: >
+#      ...
+#    supports_if: ...
+#    disconfirms_if: ...
+#    status: untested
