@@ -143,7 +143,7 @@ def rebuild(ws, router, force: bool = False) -> dict:
 
 def _scrub_restricted(db: Path) -> None:
     """Remove every RESTRICTED row from a database copy and vacuum, so no free page still holds the text."""
-    c = sqlite3.connect(db)
+    c = sqlite3.connect(db, isolation_level=None)
     c.execute("PRAGMA foreign_keys=ON")
     c.execute("PRAGMA secure_delete=ON")
     c.execute("DELETE FROM review_items WHERE tier='RESTRICTED'")
@@ -151,8 +151,8 @@ def _scrub_restricted(db: Path) -> None:
     c.execute("DELETE FROM chunks WHERE tier='RESTRICTED'")
     c.execute("DELETE FROM claims WHERE tier='RESTRICTED'")
     c.execute("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')")
-    c.commit()
     c.execute("VACUUM")
+    c.execute("PRAGMA journal_mode=DELETE")
     c.close()
 
 
@@ -161,8 +161,11 @@ def backup(ws, store, include_restricted_to: Path | None = None, keep: int = 14)
     dest_dir.mkdir(exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     snap = ws.data / f"snapshot-{stamp}.db"
-    with sqlite3.connect(snap) as dst:
+    dst = sqlite3.connect(snap)
+    try:
         store.conn.backup(dst)
+    finally:
+        dst.close()  # Windows will not delete a file that is still open
     _scrub_restricted(snap)
     out = dest_dir / f"commons-{stamp}.zip"
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
