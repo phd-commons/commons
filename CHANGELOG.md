@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 (2026-11-10)
 
 Found by running the full pipeline against a Qwen fleet:
 

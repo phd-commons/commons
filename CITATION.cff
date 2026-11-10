@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: Kovaceski
     given-names: Aco
-version: 0.1.1
-date-released: 2026-11-09
+version: 0.1.2
+date-released: 2026-11-10
 license: Apache-2.0
 repository-code: "https://github.com/phd-commons/commons"
 keywords: [doctoral research, knowledge base, retrieval-augmented generation, local LLM, research methods]
