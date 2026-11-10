@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commons Lite</title>
+<style>
+:root { --paper:#fbfbfa; --ink:#12161d; --muted:#4a5361; --rule:#d9dde3; --navy:#1F3864; --soft:#e8edf5; }
+@media (prefers-color-scheme: dark) { :root { --paper:#0f1318; --ink:#eef1f5; --muted:#a7b0bd; --rule:#2a313b; --navy:#9db8e8; --soft:#18222f; } }
+body { background:var(--paper); color:var(--ink); font:400 16px/1.6 "IBM Plex Sans","Helvetica Neue",Arial,sans-serif; margin:0; }
+.wrap { max-width:44rem; margin:0 auto; padding:2rem 1rem 4rem; }
+h1 { font-family:Georgia,serif; font-size:2rem; margin:0 0 .3rem; }
+h2 { font-family:Georgia,serif; font-size:1.25rem; margin:2.2rem 0 .6rem; }
+p { margin:0 0 .9rem; } a { color:var(--navy); }
+.muted { color:var(--muted); font-size:.85rem; }
+.notice { background:var(--soft); border-left:3px solid var(--navy); padding:.7rem .9rem; border-radius:4px; font-size:.9rem; }
+button { font:500 .85rem ui-monospace,Menlo,Consolas,monospace; border:1px solid var(--rule); background:transparent; color:var(--ink); border-radius:4px; padding:.4rem .8rem; cursor:pointer; }
+button.primary { background:var(--navy); color:var(--paper); border-color:var(--navy); }
+button:disabled { opacity:.45; cursor:default; }
+textarea, input[type=text] { width:100%; box-sizing:border-box; font:inherit; color:var(--ink); background:transparent; border:1px solid var(--rule); border-radius:4px; padding:.5rem .6rem; }
+textarea { min-height:5rem; }
+.drop { border:2px dashed var(--rule); border-radius:8px; padding:1.4rem; text-align:center; color:var(--muted); }
+.drop.over { border-color:var(--navy); color:var(--navy); }
+.card { border:1px solid var(--rule); border-radius:6px; padding:.7rem .9rem; margin:.5rem 0; }
+.card .row { display:flex; justify-content:space-between; gap:.8rem; align-items:baseline; flex-wrap:wrap; }
+.tag { font:500 .7rem ui-monospace,monospace; color:var(--muted); }
+.ok { color:#2c7a3f; } .bad { color:#b3261e; }
+.answer { border-left:3px solid var(--navy); padding:.6rem .9rem; background:var(--soft); border-radius:4px; white-space:pre-wrap; }
+.draft-label { font:500 .72rem ui-monospace,monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+progress { width:100%; }
+.hidden { display:none; }
+ul.claims { padding-left:1.2rem; } ul.claims li { margin:.4rem 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Commons Lite</h1>
+<p class="muted">The Commons method in the browser. Free, no install, no account. Part of <a href="https://github.com/phd-commons/commons">Commons</a>.</p>
+
+<p class="notice">Your library lives in this browser, on this machine, in IndexedDB. Nothing is uploaded. Clearing this browser's site data deletes it. Export regularly.</p>
+
+<h2>Model</h2>
+<p id="model-status" class="muted">Checking what this browser can run...</p>
+<div id="model-setup" class="hidden">
+  <p class="muted" id="model-note"></p>
+  <button id="load-model" class="primary">Download and load the model</button>
+  <progress id="model-progress" class="hidden" max="1" value="0"></progress>
+  <p class="muted" id="model-progress-text"></p>
+</div>
+
+<h2>Library</h2>
+<div class="drop" id="drop">Drop PDFs, Markdown or text notes here, or <label><input type="file" id="pick" multiple accept=".pdf,.md,.txt" class="hidden"><a href="#">choose files</a></label></div>
+<div id="library"></div>
+
+<h2>Ask</h2>
+<p class="muted">Answers come only from your library, with numbered citations checked against the passages. If your library does not hold the answer, it says so.</p>
+<textarea id="q" placeholder="Ask your library a question"></textarea>
+<p><button id="ask" class="primary" disabled>Ask</button></p>
+<div id="answer-box"></div>
+
+<h2>Claims</h2>
+<p class="muted">Claims the model proposes from a source, each kept only if its quote appears word for word in that source. The check is code, not a model.</p>
+<div id="claims"></div>
+
+<h2>Export</h2>
+<p><button id="export-md">Export Markdown</button> <button id="export-bib">Export BibTeX</button></p>
+
+<h2>What Lite does not do</h2>
+<p class="muted">No daily sweep, no thesis board, no Word or Excel reports, no cross-family verification, no ethics-tier enforcement. For those, install <a href="https://github.com/phd-commons/commons">full Commons</a>. Model output here is a labelled draft, never evidence.</p>
+</div>
+
+<script type="module">
+import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.mjs";
+
+// ---------- IndexedDB ----------
+const dbp = new Promise((res, rej) => {
+  const r = indexedDB.open("commons-lite", 1);
+  r.onupgradeneeded = () => {
+    r.result.createObjectStore("sources", { keyPath: "id" });
+    r.result.createObjectStore("claims", { keyPath: "id", autoIncrement: true });
+  };
+  r.onsuccess = () => res(r.result);
+  r.onerror = () => rej(r.error);
+});
+const store = async (name, mode, fn) => {
+  const db = await dbp;
+  return new Promise((res, rej) => {
+    const t = db.transaction(name, mode).objectStore(name);
+    const out = fn(t);
+    t.oncomplete = () => res(out && out.result !== undefined ? out.result : undefined);
+    t.onerror = () => rej(t.error);
+  });
+};
+const putSource = s => store("sources", "readwrite", t => t.put(s));
+const delSource = id => store("sources", "readwrite", t => t.delete(id));
+const allSources = () => new Promise(async (res, rej) => {
+  const db = await dbp; const t = db.transaction("sources").objectStore("sources").getAll();
+  t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error);
+});
+const putClaim = c => store("claims", "readwrite", t => t.put(c));
+const allClaims = () => new Promise(async (res, rej) => {
+  const db = await dbp; const t = db.transaction("claims").objectStore("claims").getAll();
+  t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error);
+});
+
+// ---------- model ----------
+let engine = null, builtin = null;
+const modelStatus = document.getElementById("model-status");
+const setup = document.getElementById("model-setup");
+
+async function detectModel() {
+  if (window.LanguageModel) {
+    try {
+      const avail = await window.LanguageModel.availability();
+      if (avail === "available") {
+        builtin = await window.LanguageModel.create();
+        modelStatus.innerHTML = 'Using Chrome\'s built-in on-device model. <span class="ok">Ready.</span>';
+        document.getElementById("ask").disabled = false;
+        return;
+      }
+    } catch (e) {}
+  }
+  if (navigator.gpu) {
+    modelStatus.textContent = "This browser can run a small open model (WebLLM, WebGPU).";
+    document.getElementById("model-note").textContent =
+      "One download of about 1.5 GB, cached afterwards. Runs entirely on this machine.";
+    setup.classList.remove("hidden");
+  } else {
+    modelStatus.textContent = "No on-device model available in this browser. You can still add sources, check quotes and export; Ask and claim extraction need a model.";
+  }
+}
+document.getElementById("load-model").addEventListener("click", async () => {
+  const btn = document.getElementById("load-model"); btn.disabled = true;
+  const bar = document.getElementById("model-progress"); bar.classList.remove("hidden");
+  const txt = document.getElementById("model-progress-text");
+  const webllm = await import("https://esm.run/@mlc-ai/web-llm");
+  engine = await webllm.CreateMLCEngine("Llama-3.2-3B-Instruct-q4f16_1-MLC", {
+    initProgressCallback: p => { bar.value = p.progress; txt.textContent = p.text; }
+  });
+  modelStatus.innerHTML = 'WebLLM model loaded. <span class="ok">Ready.</span>';
+  document.getElementById("ask").disabled = false;
+  setup.classList.add("hidden");
+});
+async function chat(prompt) {
+  if (builtin) return (await builtin.prompt(prompt));
+  if (engine) {
+    const r = await engine.chat.completions.create({ messages: [{ role: "user", content: prompt }] });
+    return r.choices[0].message.content;
+  }
+  throw new Error("no model");
+}
+
+// ---------- ingestion ----------
+async function extractPdf(buf) {
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const pg = await pdf.getPage(i);
+    const tc = await pg.getTextContent();
+    pages.push({ page: i, text: tc.items.map(it => it.str).join(" ") });
+  }
+  return pages;
+}
+async function addFile(f) {
+  const id = crypto.randomUUID();
+  let pages, kind = f.name.endsWith(".pdf") ? "pdf" : "note";
+  if (kind === "pdf") {
+    pages = await extractPdf(await f.arrayBuffer());
+  } else {
+    pages = [{ page: 1, text: await f.text() }];
+  }
+  const title = pages[0].text.split(/\s+/).slice(0, 12).join(" ") || f.name;
+  await putSource({ id, name: f.name, title, kind, pages, addedAt: new Date().toISOString() });
+  renderLibrary();
+}
+
+const drop = document.getElementById("drop");
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", async e => {
+  e.preventDefault(); drop.classList.remove("over");
+  for (const f of e.dataTransfer.files) await addFile(f);
+});
+document.getElementById("pick").addEventListener("change", async e => {
+  for (const f of e.target.files) await addFile(f);
+});
+
+async function renderLibrary() {
+  const box = document.getElementById("library");
+  const srcs = await allSources();
+  box.innerHTML = srcs.map(s => `
+    <div class="card"><div class="row"><strong>${esc(s.name)}</strong>
+    <span class="tag">${s.pages.length} page(s) · ${new Date(s.addedAt).toLocaleDateString()}</span></div>
+    <div class="row"><span class="muted">${esc(s.title)}</span>
+    <span><button data-extract="${s.id}" ${engine || builtin ? "" : "disabled"}>Extract claims</button>
+    <button data-del="${s.id}">Remove</button></span></div></div>`).join("") || '<p class="muted">Empty. Add your first source above.</p>';
+  box.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", async () => { await delSource(b.dataset.del); renderLibrary(); }));
+  box.querySelectorAll("[data-extract]").forEach(b => b.addEventListener("click", () => extractClaims(b.dataset.extract, b)));
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---------- quote check ----------
+const norm = s => s.toLowerCase().replace(/\s+/g, " ").replace(/[“”]/g, '"').replace(/[‘’]/g, "'").trim();
+const quoteOk = (quote, text) => quote.length >= 12 && norm(text).includes(norm(quote));
+
+// ---------- claims ----------
+async function extractClaims(id, btn) {
+  btn.disabled = true; btn.textContent = "Working...";
+  const s = (await allSources()).find(x => x.id === id);
+  const text = s.pages.map(p => p.text).join("\n").slice(0, 12000);
+  const prompt = `You are extracting claims from an academic source. Return ONLY a JSON array. Each element: {"claim": "one sentence stating a finding from the text", "quote": "a verbatim quote copied exactly from the text that supports it"}. Up to 8 claims. No commentary.\n\nTEXT:\n${text}`;
+  let kept = 0, rejected = 0;
+  try {
+    const raw = await chat(prompt);
+    const m = raw.match(/\[[\s\S]*\]/);
+    const arr = m ? JSON.parse(m[0]) : [];
+    for (const c of arr) {
+      if (c && c.claim && c.quote && quoteOk(c.quote, text)) {
+        await putClaim({ sourceId: id, claim: c.claim, quote: c.quote, addedAt: new Date().toISOString() });
+        kept++;
+      } else rejected++;
+    }
+  } catch (e) { rejected = -1; }
+  btn.textContent = rejected === -1 ? "Model error" : `Kept ${kept}, rejected ${rejected}`;
+  renderClaims();
+}
+async function renderClaims() {
+  const [cs, srcs] = [await allClaims(), await allSources()];
+  const name = id => (srcs.find(s => s.id === id) || {}).name || "removed source";
+  document.getElementById("claims").innerHTML = cs.length
+    ? '<ul class="claims">' + cs.map(c => `<li>${esc(c.claim)} <span class="tag">${esc(name(c.sourceId))}</span><br><span class="muted">"${esc(c.quote)}"</span></li>`).join("") + "</ul>"
+    : '<p class="muted">No claims yet. Extract claims from a source above.</p>';
+}
+
+// ---------- retrieval: BM25 ----------
+const tok = s => s.toLowerCase().match(/[a-z0-9]+/g) || [];
+function chunksOf(s) {
+  const out = [];
+  s.pages.forEach(p => {
+    const words = p.text.split(/\s+/);
+    for (let i = 0; i < words.length; i += 180)
+      out.push({ sourceId: s.id, name: s.name, page: p.page, text: words.slice(i, i + 220).join(" ") });
+  });
+  return out;
+}
+function bm25(q, chunks, k = 6) {
+  const qt = new Set(tok(q));
+  const df = {}, tf = chunks.map(c => { const t = tok(c.text); const m = {}; t.forEach(w => m[w] = (m[w] || 0) + 1); return m; });
+  chunks.forEach((c, i) => Object.keys(tf[i]).forEach(w => df[w] = (df[w] || 0) + 1));
+  const N = chunks.length, avg = tf.reduce((a, m) => a + Object.values(m).reduce((x, y) => x + y, 0), 0) / Math.max(N, 1);
+  const score = chunks.map((c, i) => {
+    let s = 0;
+    qt.forEach(w => {
+      const f = tf[i][w] || 0; if (!f) return;
+      const idf = Math.log(1 + (N - (df[w] || 0) + .5) / ((df[w] || 0) + .5));
+      s += idf * f * 2.2 / (f + 1.2 * (1 - .75 + .75 * Object.values(tf[i]).reduce((x, y) => x + y, 0) / avg));
+    });
+    return { c, s };
+  });
+  return score.sort((a, b) => b.s - a.s).slice(0, k).filter(x => x.s > 0).map(x => x.c);
+}
+
+// ---------- ask ----------
+document.getElementById("ask").addEventListener("click", async () => {
+  const q = document.getElementById("q").value.trim(); if (!q) return;
+  const box = document.getElementById("answer-box");
+  box.innerHTML = '<p class="muted">Working...</p>';
+  const srcs = await allSources();
+  const chunks = srcs.flatMap(chunksOf);
+  const top = bm25(q, chunks);
+  if (!top.length) { box.innerHTML = '<p class="answer">Your library does not hold anything that bears on this question.</p>'; return; }
+  const numbered = top.map((c, i) => `[${i + 1}] (${c.name}, p.${c.page}) ${c.text}`).join("\n\n");
+  const prompt = `Answer the question using ONLY the passages below. Cite every statement with [n] referring to the passage number. If the passages do not answer it, say exactly: "The library does not hold the answer." Keep it short.\n\nQUESTION: ${q}\n\nPASSAGES:\n${numbered}`;
+  let ans;
+  try { ans = await chat(prompt); } catch (e) { box.innerHTML = '<p class="muted">Model error.</p>'; return; }
+  const cited = [...ans.matchAll(/\[(\d+)\]/g)].map(m => Number(m[1]));
+  const ok = cited.length > 0 && cited.every(n => n >= 1 && n <= top.length);
+  const holds = ans.includes("does not hold the answer");
+  const label = holds ? "" :
+    ok ? `<p class="draft-label ok">Model draft. ${new Set(cited).size} citation(s) checked against the passages.</p>`
+       : '<p class="draft-label bad">Refused: the model answered without valid citations. Treat this as unverified or retry.</p>';
+  box.innerHTML = (holds || ok) ? `${label}<p class="answer">${esc(ans)}</p>` +
+    '<p class="muted">Sources: ' + top.map((c, i) => `[${i + 1}] ${esc(c.name)} p.${c.page}`).join(" · ") + "</p>"
+    : `${label}<p class="answer">${esc(ans)}</p>`;
+});
+
+// ---------- export ----------
+function dl(name, text) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+document.getElementById("export-md").addEventListener("click", async () => {
+  const [srcs, cs] = [await allSources(), await allClaims()];
+  let md = "# Commons Lite export\n\nExported " + new Date().toISOString() + "\n\n## Sources\n";
+  srcs.forEach(s => md += `\n- ${s.name} (${s.pages.length} page(s), added ${s.addedAt})\n`);
+  md += "\n## Claims\n";
+  cs.forEach(c => { const s = srcs.find(x => x.id === c.sourceId); md += `\n- ${c.claim}\n  Quote: "${c.quote}"\n  Source: ${s ? s.name : "removed"}\n`; });
+  dl("commons-lite-export.md", md);
+});
+document.getElementById("export-bib").addEventListener("click", async () => {
+  const srcs = await allSources();
+  let bib = "";
+  srcs.forEach((s, i) => {
+    const key = "source" + (i + 1);
+    bib += `@misc{${key},\n  title = {${s.title.replace(/[{}]/g, "")}},\n  howpublished = {${s.name}},\n  year = {${s.addedAt.slice(0, 4)}}\n}\n\n`;
+  });
+  dl("commons-lite.bib", bib);
+});
+
+renderLibrary(); renderClaims(); detectModel();
+</script>
+</body>
+</html>
